@@ -12,11 +12,25 @@
                         <h4><i class="fas fa-plus-circle me-2"></i>Create New Support Ticket</h4>
                     </div>
                     <div class="card-body">
+                        <!-- Error Messages -->
+                        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <span th:text="${errorMessage}">Error message</span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+
+                        <!-- Success Messages -->
+                        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <span th:text="${successMessage}">Success message</span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+
                         <form th:action="@{/tickets/create}" th:object="${ticket}" method="post">
                             <!-- Selected Order Display -->
                             <div th:if="${selectedOrder}" class="alert alert-info">
                                 <h6><i class="fas fa-info-circle me-2"></i>Selected Order</h6>
-                                <strong th:text="${selectedOrder.foodItem}">Food Item</strong> - 
+                                <strong th:text="${selectedOrder.foodItem}">Food Item</strong> -
                                 <span th:text="${selectedOrder.restaurantName}">Restaurant</span>
                                 (<span th:text="${selectedOrder.currency + ' ' + selectedOrder.price}">Price</span>)
                             </div>
@@ -29,29 +43,57 @@
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="customerName" class="form-label">Full Name *</label>
-                                        <input type="text" class="form-control" id="customerName" name="customerName" required
-                                               placeholder="Enter your full name">
+                                        <input type="text" class="form-control"
+                                               th:class="${customerNameError} ? 'form-control is-invalid' : 'form-control'"
+                                               id="customerName" name="customerName" required
+                                               th:value="${customerName}"
+                                               placeholder="Enter your full name" minlength="2" maxlength="100">
+                                        <div class="invalid-feedback" th:if="${customerNameError}" th:text="${customerNameError}">
+                                            Please provide a valid name (2-100 characters).
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="customerEmail" class="form-label">Email Address *</label>
-                                        <input type="email" class="form-control" id="customerEmail" name="customerEmail" required
-                                               placeholder="your.email@example.com">
+                                        <input type="email" class="form-control"
+                                               th:class="${customerEmailError} ? 'form-control is-invalid' : 'form-control'"
+                                               id="customerEmail" name="customerEmail" required
+                                               th:value="${customerEmail}"
+                                               placeholder="your.email@example.com" maxlength="150">
+                                        <div class="invalid-feedback" th:if="${customerEmailError}" th:text="${customerEmailError}">
+                                            Please provide a valid email address.
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="customerPhone" class="form-label">Phone Number *</label>
-                                        <input type="tel" class="form-control" id="customerPhone" name="customerPhone" required
-                                               placeholder="+94 77 123 4567">
+                                        <input type="tel" class="form-control"
+                                               th:class="${customerPhoneError} ? 'form-control is-invalid' : 'form-control'"
+                                               id="customerPhone" name="customerPhone" required
+                                               th:value="${customerPhone}"
+                                               placeholder="+94 77 123 4567" pattern="[\+]?[0-9\s\-\(\)]{10,20}"
+                                               title="Please enter a valid phone number (10-20 digits, may include +, spaces, hyphens, parentheses)">
+                                        <div class="invalid-feedback" th:if="${customerPhoneError}" th:text="${customerPhoneError}">
+                                            Please provide a valid phone number (9-15 digits). Sri Lankan format: +94 77 123 4567
+                                        </div>
+                                        <div class="form-text">
+                                            Examples: +94771234567, 0771234567, +94 77 123 4567
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="customerAddress" class="form-label">Address</label>
-                                        <input type="text" class="form-control" id="customerAddress" name="customerAddress"
-                                               placeholder="Your address (optional)">
+                                        <input type="text" class="form-control"
+                                               th:class="${customerAddressError} ? 'form-control is-invalid' : 'form-control'"
+                                               id="customerAddress" name="customerAddress"
+                                               th:value="${customerAddress}"
+                                               placeholder="Your address (optional)" maxlength="200">
+                                        <div class="invalid-feedback" th:if="${customerAddressError}" th:text="${customerAddressError}">
+                                            Address must be less than 200 characters.
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -136,5 +178,59 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Client-side validation and form enhancement
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const phoneInput = document.getElementById('customerPhone');
+            const submitButton = document.querySelector('button[type="submit"]');
+
+            // Phone number formatting and validation
+            phoneInput.addEventListener('input', function() {
+                let value = this.value.replace(/[^\d\+\s\-\(\)]/g, '');
+                this.value = value;
+
+                // Remove all non-digits for validation
+                const digitsOnly = value.replace(/[^\d]/g, '');
+
+                // Validate length
+                if (digitsOnly.length >= 9 && digitsOnly.length <= 15) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                    if (digitsOnly.length > 0) {
+                        this.classList.add('is-invalid');
+                    }
+                }
+            });
+
+            // Form submission with loading state
+            form.addEventListener('submit', function(e) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creating Ticket...';
+
+                // Re-enable button after 10 seconds as fallback
+                setTimeout(function() {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Submit Ticket';
+                }, 10000);
+            });
+
+            // Auto-dismiss alerts after 5 seconds
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                if (alert.classList.contains('alert-success')) {
+                    setTimeout(function() {
+                        alert.style.opacity = '0';
+                        setTimeout(function() {
+                            alert.remove();
+                        }, 300);
+                    }, 5000);
+                }
+            });
+        });
+    </script>
 </body>
 </html>

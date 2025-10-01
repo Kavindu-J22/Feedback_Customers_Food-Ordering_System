@@ -78,16 +78,59 @@ public class TicketController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        if (result.hasErrors()) {
+        // Validate customer input parameters
+        boolean hasCustomerErrors = false;
+
+        if (customerName == null || customerName.trim().isEmpty() || customerName.length() < 2
+                || customerName.length() > 100) {
+            model.addAttribute("customerNameError", "Name is required and must be between 2 and 100 characters");
+            hasCustomerErrors = true;
+        }
+
+        if (customerEmail == null || customerEmail.trim().isEmpty()
+                || !customerEmail.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            model.addAttribute("customerEmailError", "Please provide a valid email address");
+            hasCustomerErrors = true;
+        }
+
+        if (customerPhone == null || customerPhone.trim().isEmpty() ||
+                !customerPhone.replaceAll("[\\s\\-\\(\\)\\+]", "").matches("\\d{9,15}")) {
+            model.addAttribute("customerPhoneError", "Please provide a valid phone number (9-15 digits)");
+            hasCustomerErrors = true;
+        }
+
+        if (customerAddress != null && customerAddress.length() > 200) {
+            model.addAttribute("customerAddressError", "Address must be less than 200 characters");
+            hasCustomerErrors = true;
+        }
+
+        // Check for ticket validation errors
+        if (result.hasErrors() || hasCustomerErrors) {
+            if (hasCustomerErrors) {
+                model.addAttribute("errorMessage", "Please correct the customer information errors below.");
+            }
             model.addAttribute("categories", categoryService.getAllCategories());
             model.addAttribute("orders", foodOrderService.getAvailableFoodOrders());
+
+            // Preserve form data
+            model.addAttribute("customerName", customerName);
+            model.addAttribute("customerEmail", customerEmail);
+            model.addAttribute("customerPhone", customerPhone);
+            model.addAttribute("customerAddress", customerAddress);
+
             return "tickets/create";
         }
 
         try {
+            // Clean phone number (remove spaces, hyphens, parentheses but keep +)
+            String cleanPhone = customerPhone.replaceAll("[\\s\\-\\(\\)]", "");
+
             // Create or get customer
-            Customer customer = customerService.createOrGetCustomer(customerName, customerEmail, customerPhone,
-                    customerAddress);
+            Customer customer = customerService.createOrGetCustomer(
+                    customerName.trim(),
+                    customerEmail.trim().toLowerCase(),
+                    cleanPhone,
+                    customerAddress != null ? customerAddress.trim() : null);
             ticket.setCustomer(customer);
 
             // Save ticket
@@ -96,9 +139,25 @@ public class TicketController {
             redirectAttributes.addFlashAttribute("successMessage", "Ticket created successfully!");
             return "redirect:/tickets";
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Error creating ticket: " + e.getMessage());
+            String errorMsg = "Error creating ticket: " + e.getMessage();
+
+            // Check for specific database constraint violations
+            if (e.getMessage().contains("Duplicate entry") && e.getMessage().contains("email")) {
+                errorMsg = "A customer with this email address already exists. Please use a different email or contact support.";
+            } else if (e.getMessage().contains("phone")) {
+                errorMsg = "Invalid phone number format. Please use a valid Sri Lankan phone number format.";
+            }
+
+            model.addAttribute("errorMessage", errorMsg);
             model.addAttribute("categories", categoryService.getAllCategories());
             model.addAttribute("orders", foodOrderService.getAvailableFoodOrders());
+
+            // Preserve form data
+            model.addAttribute("customerName", customerName);
+            model.addAttribute("customerEmail", customerEmail);
+            model.addAttribute("customerPhone", customerPhone);
+            model.addAttribute("customerAddress", customerAddress);
+
             return "tickets/create";
         }
     }
