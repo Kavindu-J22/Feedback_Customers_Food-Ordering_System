@@ -106,14 +106,21 @@
                                     <td th:text="${#temporals.format(ticket.createdAt, 'dd MMM yyyy HH:mm')}">Date</td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
-                                            <a th:href="@{/tickets/{id}(id=${ticket.id})}" 
+                                            <a th:href="@{/tickets/{id}(id=${ticket.id})}"
                                                class="btn btn-outline-primary" title="View">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a th:href="@{/tickets/{id}/edit(id=${ticket.id})}" 
+                                            <!-- Edit button - only show for OPEN status -->
+                                            <a th:href="@{/tickets/{id}/edit(id=${ticket.id})}"
                                                class="btn btn-outline-warning" title="Edit"
-                                               th:if="${ticket.status.toString() != 'IN_PROGRESS'}">
+                                               th:if="${ticket.status.toString() == 'OPEN'}">
                                                 <i class="fas fa-edit"></i>
+                                            </a>
+                                            <!-- Reply button - show for all non-OPEN statuses -->
+                                            <a th:href="@{/tickets/{id}(id=${ticket.id})}"
+                                               class="btn btn-outline-success" title="Reply"
+                                               th:if="${ticket.status.toString() != 'OPEN'}">
+                                                <i class="fas fa-reply"></i>
                                             </a>
                                         </div>
                                     </td>

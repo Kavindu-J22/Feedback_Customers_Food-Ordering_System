@@ -15,25 +15,25 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/tickets")
 public class TicketController {
-    
+
     @Autowired
     private TicketService ticketService;
-    
+
     @Autowired
     private CustomerService customerService;
-    
+
     @Autowired
     private CategoryService categoryService;
-    
+
     @Autowired
     private FoodOrderService foodOrderService;
-    
+
     @GetMapping
     public String listTickets(@RequestParam(required = false) String search,
-                             @RequestParam(required = false) String status,
-                             @RequestParam(required = false) String priority,
-                             Model model) {
-        
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            Model model) {
+
         if (search != null && !search.trim().isEmpty()) {
             model.addAttribute("tickets", ticketService.searchTickets(search));
             model.addAttribute("search", search);
@@ -46,52 +46,53 @@ public class TicketController {
         } else {
             model.addAttribute("tickets", ticketService.getAllTickets());
         }
-        
+
         model.addAttribute("statuses", Ticket.Status.values());
         model.addAttribute("priorities", Ticket.Priority.values());
         return "tickets/list";
     }
-    
+
     @GetMapping("/create")
     public String createTicketForm(@RequestParam(required = false) Long orderId, Model model) {
         model.addAttribute("ticket", new Ticket());
         model.addAttribute("categories", categoryService.getAllCategories());
         model.addAttribute("orders", foodOrderService.getAvailableFoodOrders());
-        
+
         if (orderId != null) {
             Optional<FoodOrder> order = foodOrderService.getFoodOrderById(orderId);
             if (order.isPresent()) {
                 model.addAttribute("selectedOrder", order.get());
             }
         }
-        
+
         return "tickets/create";
     }
-    
+
     @PostMapping("/create")
     public String createTicket(@Valid @ModelAttribute Ticket ticket,
-                              BindingResult result,
-                              @RequestParam String customerName,
-                              @RequestParam String customerEmail,
-                              @RequestParam String customerPhone,
-                              @RequestParam(required = false) String customerAddress,
-                              Model model,
-                              RedirectAttributes redirectAttributes) {
-        
+            BindingResult result,
+            @RequestParam String customerName,
+            @RequestParam String customerEmail,
+            @RequestParam String customerPhone,
+            @RequestParam(required = false) String customerAddress,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
         if (result.hasErrors()) {
             model.addAttribute("categories", categoryService.getAllCategories());
             model.addAttribute("orders", foodOrderService.getAvailableFoodOrders());
             return "tickets/create";
         }
-        
+
         try {
             // Create or get customer
-            Customer customer = customerService.createOrGetCustomer(customerName, customerEmail, customerPhone, customerAddress);
+            Customer customer = customerService.createOrGetCustomer(customerName, customerEmail, customerPhone,
+                    customerAddress);
             ticket.setCustomer(customer);
-            
+
             // Save ticket
             ticketService.saveTicket(ticket);
-            
+
             redirectAttributes.addFlashAttribute("successMessage", "Ticket created successfully!");
             return "redirect:/tickets";
         } catch (Exception e) {
@@ -101,7 +102,7 @@ public class TicketController {
             return "tickets/create";
         }
     }
-    
+
     @GetMapping("/{id}")
     public String viewTicket(@PathVariable Long id, Model model) {
         Optional<Ticket> ticket = ticketService.getTicketById(id);
@@ -114,16 +115,17 @@ public class TicketController {
         }
         return "redirect:/tickets";
     }
-    
+
     @GetMapping("/{id}/edit")
     public String editTicketForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
         Optional<Ticket> ticket = ticketService.getTicketById(id);
         if (ticket.isPresent()) {
             if (!ticketService.canEditTicket(ticket.get())) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Cannot edit ticket that is in progress. You can only add replies.");
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Cannot edit ticket. Only tickets with OPEN status can be edited. You can only add replies.");
                 return "redirect:/tickets/" + id;
             }
-            
+
             model.addAttribute("ticket", ticket.get());
             model.addAttribute("categories", categoryService.getAllCategories());
             model.addAttribute("orders", foodOrderService.getAvailableFoodOrders());
@@ -133,14 +135,14 @@ public class TicketController {
         }
         return "redirect:/tickets";
     }
-    
+
     @PostMapping("/{id}/edit")
     public String editTicket(@PathVariable Long id,
-                            @Valid @ModelAttribute Ticket ticket,
-                            BindingResult result,
-                            Model model,
-                            RedirectAttributes redirectAttributes) {
-        
+            @Valid @ModelAttribute Ticket ticket,
+            BindingResult result,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
         if (result.hasErrors()) {
             model.addAttribute("categories", categoryService.getAllCategories());
             model.addAttribute("orders", foodOrderService.getAvailableFoodOrders());
@@ -148,17 +150,18 @@ public class TicketController {
             model.addAttribute("priorities", Ticket.Priority.values());
             return "tickets/edit";
         }
-        
+
         try {
             Optional<Ticket> existingTicket = ticketService.getTicketById(id);
             if (existingTicket.isPresent()) {
                 Ticket existing = existingTicket.get();
-                
+
                 if (!ticketService.canEditTicket(existing)) {
-                    redirectAttributes.addFlashAttribute("errorMessage", "Cannot edit ticket that is in progress.");
+                    redirectAttributes.addFlashAttribute("errorMessage",
+                            "Cannot edit ticket. Only tickets with OPEN status can be edited.");
                     return "redirect:/tickets/" + id;
                 }
-                
+
                 existing.setTitle(ticket.getTitle());
                 existing.setDescription(ticket.getDescription());
                 existing.setPriority(ticket.getPriority());
@@ -166,28 +169,28 @@ public class TicketController {
                 existing.setCategory(ticket.getCategory());
                 existing.setFoodOrder(ticket.getFoodOrder());
                 existing.setAssignedTo(ticket.getAssignedTo());
-                
+
                 ticketService.updateTicket(existing);
                 redirectAttributes.addFlashAttribute("successMessage", "Ticket updated successfully!");
             }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error updating ticket: " + e.getMessage());
         }
-        
+
         return "redirect:/tickets/" + id;
     }
-    
+
     @PostMapping("/{id}/reply")
     public String addReply(@PathVariable Long id,
-                          @Valid @ModelAttribute TicketReply reply,
-                          BindingResult result,
-                          RedirectAttributes redirectAttributes) {
-        
+            @Valid @ModelAttribute TicketReply reply,
+            BindingResult result,
+            RedirectAttributes redirectAttributes) {
+
         if (result.hasErrors()) {
             redirectAttributes.addFlashAttribute("errorMessage", "Please provide a valid reply message.");
             return "redirect:/tickets/" + id;
         }
-        
+
         try {
             Optional<Ticket> ticket = ticketService.getTicketById(id);
             if (ticket.isPresent()) {
@@ -198,10 +201,10 @@ public class TicketController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error adding reply: " + e.getMessage());
         }
-        
+
         return "redirect:/tickets/" + id;
     }
-    
+
     @PostMapping("/{id}/delete")
     public String deleteTicket(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
