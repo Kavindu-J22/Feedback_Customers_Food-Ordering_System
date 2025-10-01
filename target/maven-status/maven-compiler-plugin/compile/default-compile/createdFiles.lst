@@ -12,6 +12,7 @@ com\foodordering\controller\TicketController.class
 com\foodordering\repository\TicketRepository.class
 com\foodordering\controller\DashboardController.class
 com\foodordering\entity\Ticket$Priority.class
+com\foodordering\config\WebConfig.class
 com\foodordering\repository\TicketReplyRepository.class
 com\foodordering\entity\Ticket.class
 com\foodordering\entity\FoodOrder.class

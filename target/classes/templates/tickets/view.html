@@ -48,16 +48,16 @@
                                 <p><strong>Category:</strong> 
                                    <span class="badge bg-info" th:text="${ticket.category.name}">Category</span>
                                 </p>
-                                <p><strong>Priority:</strong> 
-                                   <span th:class="'badge bg-' + (${ticket.priority.toString().toLowerCase() == 'urgent'} ? 'danger' : 
-                                                  ${ticket.priority.toString().toLowerCase() == 'high'} ? 'warning' : 
-                                                  ${ticket.priority.toString().toLowerCase() == 'medium'} ? 'primary' : 'success')"
+                                <p><strong>Priority:</strong>
+                                   <span th:class="${'badge bg-' + (ticket.priority.toString().toLowerCase() == 'urgent' ? 'danger' :
+                                                  ticket.priority.toString().toLowerCase() == 'high' ? 'warning' :
+                                                  ticket.priority.toString().toLowerCase() == 'medium' ? 'primary' : 'success')}"
                                          th:text="${ticket.priority}">Priority</span>
                                 </p>
-                                <p><strong>Status:</strong> 
-                                   <span th:class="'badge bg-' + (${ticket.status.toString().toLowerCase() == 'open'} ? 'danger' : 
-                                                  ${ticket.status.toString().toLowerCase() == 'in_progress'} ? 'warning' : 
-                                                  ${ticket.status.toString().toLowerCase() == 'resolved'} ? 'success' : 'secondary')"
+                                <p><strong>Status:</strong>
+                                   <span th:class="${'badge bg-' + (ticket.status.toString().toLowerCase() == 'open' ? 'danger' :
+                                                  ticket.status.toString().toLowerCase() == 'in_progress' ? 'warning' :
+                                                  ticket.status.toString().toLowerCase() == 'resolved' ? 'success' : 'secondary')}"
                                          th:text="${#strings.replace(ticket.status, '_', ' ')}">Status</span>
                                 </p>
                                 <p th:if="${ticket.assignedTo}"><strong>Assigned To:</strong> <span th:text="${ticket.assignedTo}">Staff</span></p>

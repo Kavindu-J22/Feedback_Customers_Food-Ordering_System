@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Food Ordering System</title>
+    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Food Ordering System</title>
     
     <!-- Bootstrap CSS -->
     <link href="/webjars/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
@@ -89,7 +89,7 @@
         </div>
 
         <!-- Page Content -->
-        <div>
+        <div layout:fragment="content">
             <!-- Content will be inserted here -->
         </div>
     </main>

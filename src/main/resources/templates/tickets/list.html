@@ -92,15 +92,15 @@
                                         <span class="badge bg-info" th:text="${ticket.category.name}">Category</span>
                                     </td>
                                     <td>
-                                        <span th:class="'badge bg-' + (${ticket.priority.toString().toLowerCase() == 'urgent'} ? 'danger' : 
-                                                       ${ticket.priority.toString().toLowerCase() == 'high'} ? 'warning' : 
-                                                       ${ticket.priority.toString().toLowerCase() == 'medium'} ? 'primary' : 'success')"
+                                        <span th:class="${'badge bg-' + (ticket.priority.toString().toLowerCase() == 'urgent' ? 'danger' :
+                                                       ticket.priority.toString().toLowerCase() == 'high' ? 'warning' :
+                                                       ticket.priority.toString().toLowerCase() == 'medium' ? 'primary' : 'success')}"
                                               th:text="${ticket.priority}">Priority</span>
                                     </td>
                                     <td>
-                                        <span th:class="'badge bg-' + (${ticket.status.toString().toLowerCase() == 'open'} ? 'danger' : 
-                                                       ${ticket.status.toString().toLowerCase() == 'in_progress'} ? 'warning' : 
-                                                       ${ticket.status.toString().toLowerCase() == 'resolved'} ? 'success' : 'secondary')"
+                                        <span th:class="${'badge bg-' + (ticket.status.toString().toLowerCase() == 'open' ? 'danger' :
+                                                       ticket.status.toString().toLowerCase() == 'in_progress' ? 'warning' :
+                                                       ticket.status.toString().toLowerCase() == 'resolved' ? 'success' : 'secondary')}"
                                               th:text="${#strings.replace(ticket.status, '_', ' ')}">Status</span>
                                     </td>
                                     <td th:text="${#temporals.format(ticket.createdAt, 'dd MMM yyyy HH:mm')}">Date</td>
